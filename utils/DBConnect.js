@@ -1,4 +1,4 @@
-const {sequelize} = require ('../models/User')
+const sequelize = require('../models/sequlizeInstans.js');
 
 async function connectToDb() {
     try {

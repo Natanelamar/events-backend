@@ -1,11 +1,10 @@
-const dotenv = require('dotenv');
+require('dotenv').config();
 const  connectToDb  = require('./utils/DBConnect.js');
 const app = require('./app.js')
 
 
 
-// Load environment variables
-dotenv.config();
+
 
 
 

@@ -1,10 +1,12 @@
-const { User } = require('../models/User.js');
+const  User  = require('../models/User.js');
 const {generateToken} = require('../utils/generateToken.js');
 const bcrypt = require('bcrypt');
 
 exports.create = async (req, res) => {
     try {
         const newUser = await User.create(req.body);
+        console.log(req.body);
+        console.log(newUser);
 
         if (newUser) {
             const userObj = {
@@ -35,7 +37,7 @@ exports.create = async (req, res) => {
         } else {
             res.status(500).json({
                 status: 'Failure',
-                message: 'Internal server error'
+                message: error.message || 'Internal server error'
             });
         }
     }

@@ -1,15 +1,11 @@
-const {Sequelize, DataTypes} = require('sequelize');
-
+const {DataTypes} = require('sequelize');
+const sequelize = require('./sequlizeInstans.js');
 const bcrypt = require('bcrypt');
 
-require('dotenv').config();
 
 
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'postgres',  // Adjust dialect as per your database
-    logging: false        // Optional: Disable logging for cleaner output
-});
+
   
 
 const User = sequelize.define('User', {
@@ -72,7 +68,7 @@ User.beforeCreate(async (user) => {
     }
 });
 
-module.exports = { User, sequelize };
+module.exports = User;
 
 
 
