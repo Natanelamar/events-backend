@@ -42,6 +42,11 @@ const User = sequelize.define('User', {
             isEmail: { msg: "Must have a valid email address." }
         }
     },
+    role: {
+        type: DataTypes.ENUM('user', 'producer', 'admin'), // Define allowed roles
+        allowNull: false,
+        defaultValue: 'user' // Set default role as 'user'
+    },
     password: {
         type: DataTypes.STRING,
         allowNull: false,

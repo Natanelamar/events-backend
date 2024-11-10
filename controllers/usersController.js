@@ -1,6 +1,8 @@
 const  User  = require('../models/User.js');
 const {generateToken} = require('../utils/generateToken.js');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 
 exports.create = async (req, res) => {
     try {
@@ -88,3 +90,26 @@ exports.login = async (req, res) => {
         return res.status(500).json({ status: 'Failure', message: 'Internal server error' });
     }
 };
+
+
+exports.isAuthonticatd = async (req, res) =>{
+    try{
+    const  {jwtRefresh, jwtAccess } = req.cookies;
+    
+        if(jwtRefresh){
+            jwt.verify(jwtRefresh, process.env.SECRET_KEY, (err, decode) =>{
+                if (err){
+                    res.status(403).json({message: err.message})
+                }else {
+                    req.user =decode
+                    console.log(decode)
+                    res.status(200).json({message: 'success'})
+                }
+            })
+
+        }
+    
+}catch (err){
+    console.log(err.message);
+}
+}
