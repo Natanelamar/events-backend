@@ -5,6 +5,7 @@ const router = express.Router();
 router.route('/register/users').post(usersController.create);
 router.route('/login').post (usersController.login);
 router.route('/auth').get(usersController.isAuthonticatd);
+router.route('/logout').get(usersController.logout)
 
 
 module.exports = router;

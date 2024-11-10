@@ -134,3 +134,16 @@ exports.isAuthonticatd = async (req, res) =>{
     console.log(err.message);
 }
 }
+
+exports.logout = async (req,res ) =>{
+    res.cookie("jwtRefresh", "", {
+        httpOnly: true,
+        expires: new Date(0),
+      });
+    res.cookie("jwtAccess", "", {
+        httpOnly: true,
+        expires: new Date(0),
+      });
+      res.status(200).json({ message: "User logged out" });
+    
+}
