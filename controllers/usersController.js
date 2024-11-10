@@ -12,8 +12,8 @@ exports.create = async (req, res) => {
 
         if (newUser) {
             const userObj = {
-                name: newUser.firstName,
-                lastname: newUser.lastName,
+                firstName: newUser.firstName,
+                lastName: newUser.lastName,
                 email: newUser.email
             };
 
@@ -24,8 +24,8 @@ exports.create = async (req, res) => {
             res.status(200).json({
                 status: 'Success',
                 data: {
-                    name: newUser.firstName,
-                    lastname: newUser.lastName,
+                    firstName: newUser.firstName,
+                    lastName: newUser.lastName,
                     email: newUser.email
                 }
             });
@@ -55,8 +55,8 @@ exports.login = async (req, res) => {
             const match = await bcrypt.compare(password, user.password);
             if (match) {
                 const userObj = {
-                    name: user.firstName,
-                    lastname: user.lastName,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
                     email: user.email
                 };
 
@@ -72,8 +72,8 @@ exports.login = async (req, res) => {
                 return res.status(200).json({
                     status: 'Success',
                     data: {
-                        name: user.firstName,
-                        lastname: user.lastName,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
                         email: user.email
                     }
                 });
@@ -94,20 +94,41 @@ exports.login = async (req, res) => {
 
 exports.isAuthonticatd = async (req, res) =>{
     try{
-    const  {jwtRefresh, jwtAccess } = req.cookies;
+        const { jwtRefresh } = req.cookies;
     
         if(jwtRefresh){
-            jwt.verify(jwtRefresh, process.env.SECRET_KEY, (err, decode) =>{
+            jwt.verify(jwtRefresh, process.env.SECRET_KEY,async (err, decode) =>{
                 if (err){
-                    res.status(403).json({message: err.message})
-                }else {
-                    req.user =decode
-                    console.log(decode)
-                    res.status(200).json({message: 'success'})
-                }
+                    
+                     return res.status(403).json({message: err.message})
+                } 
+                
+                const { email} = decode
+                try {
+                    const userData = await User.findOne({ where: { email: email } });
+                    if (!userData) {
+                        return res.status(404).json({ message: 'User not found' });
+                    }
+                    
+                    req.user = {
+                        firstName: userData.firstName,
+                        lastName: userData.lastName,
+                        email: userData.email,
+                        role: userData.role
+                    };
+                    console.log(req.user);
+                    res.status(200).json({ message: 'success', user: req.user });
+                } catch (err) {
+                    console.log(err.message);
+                    res.status(500).json({ message: 'Database error' });
+                } 
+               
             })
 
+        }else{
+            res.status( 401).json({message: 'No authentication token found'})
         }
+      
     
 }catch (err){
     console.log(err.message);
