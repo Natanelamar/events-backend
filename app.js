@@ -2,6 +2,7 @@ const express = require('express');
 const morgan = require ('morgan');
 const userRoutes = require('./routes/userRoutes')
 const eventsRoutes = require('./routes/eventRoutes');
+const purchasRouter = require('./routes/purchasRoutes')
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const app = express();
@@ -23,6 +24,7 @@ app.use((req, res, next) =>{
 
 app.use('/',userRoutes );
 app.use('/',eventsRoutes);
+app.use('/',purchasRouter);
 
 
 module.exports = app;

@@ -25,22 +25,10 @@ const UserPurchase = sequelize.define('UserPurchase', {
     },
     purchase_date: {
         type: DataTypes.DATEONLY,     // Stores only the date
-        allowNull: false
-    },
-    quantity: {
-        type: DataTypes.INTEGER,      // Quantity of tickets purchased
         allowNull: false,
-        validate: {
-            min: 1                    // Ensure at least 1 ticket is purchased
-        }
-    },
-    total_amount: {
-        type: DataTypes.DECIMAL(10, 2), // Total cost of the purchase
-        allowNull: false,
-        validate: {
-            min: 0                    // Ensure total is not negative
-        }
+        defaultValue:  DataTypes.NOW 
     }
+   
 });
 
 module.exports = UserPurchase;
