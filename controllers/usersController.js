@@ -6,18 +6,14 @@ const jwt = require('jsonwebtoken');
 
 exports.create = async (req, res) => {
     try {
-        const newUser = await User.create(req.body);
-        console.log(req.body);
-        console.log(newUser);
-
-        if (newUser) {
+        const newUser = await User.create(req.body);    
+          if (newUser) {
             const userObj = {
                 firstName: newUser.firstName,
-                lastName: newUser.lastName,
                 email: newUser.email
             };
 
-           console.log(userObj)
+    
             generateToken(res, userObj);
 
            
@@ -25,7 +21,6 @@ exports.create = async (req, res) => {
                 status: 'Success',
                 data: {
                     firstName: newUser.firstName,
-                    lastName: newUser.lastName,
                     email: newUser.email
                 }
             });
@@ -56,7 +51,6 @@ exports.login = async (req, res) => {
             if (match) {
                 const userObj = {
                     firstName: user.firstName,
-                    lastName: user.lastName,
                     email: user.email
                 };
 
@@ -73,7 +67,6 @@ exports.login = async (req, res) => {
                     status: 'Success',
                     data: {
                         firstName: user.firstName,
-                        lastName: user.lastName,
                         email: user.email
                     }
                 });
@@ -111,6 +104,7 @@ exports.isAuthonticatd = async (req, res) =>{
                     }
                     
                     req.user = {
+                        id:userData.id,
                         firstName: userData.firstName,
                         lastName: userData.lastName,
                         email: userData.email,
