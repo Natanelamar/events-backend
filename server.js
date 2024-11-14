@@ -1,6 +1,7 @@
 require('dotenv').config();
 const  connectToDb  = require('./utils/DBConnect.js');
 const syncData = require('./models/syncDatabase.js')
+const insertEvents = require('./data/insertEvents.js')
 const app = require('./app.js')
 
 
@@ -16,6 +17,7 @@ const app = require('./app.js')
 const PORT = process.env.PORT || 3000;
 connectToDb().then(() => {
   syncData()
+  insertEvents()
   app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
   });

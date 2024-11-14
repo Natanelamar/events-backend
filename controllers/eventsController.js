@@ -27,7 +27,7 @@ exports.getTreeFromCategory = async (req, res) =>{
 exports.getByCategory = async (req, res) => {
     try {
         const { category, page = 0 } = req.query; // Default page to 0 if not provided
-        const limit = 5; // Number of events per page
+        const limit = 12; // Number of events per page
         const offset = page * limit; // Calculate the offset
 
         // Get the total count of events in this category

@@ -4,6 +4,6 @@ const eventsController = require('../controllers/eventsController');
 
 
 router.route('/category').get(eventsController.getTreeFromCategory);
-router.route('/category/allEvents').get(eventsController.getByCategory)
+router.route('/events').get(eventsController.getByCategory)
 
 module.exports = router;

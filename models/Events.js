@@ -41,7 +41,7 @@ const Event = sequelize.define('Event', {
         defaultValue: 0 // Start with 0 tickets sold
     },
     ticketsAvailable: {
-        type: DataTypes.INTEGER,  
+        type: DataTypes.INTEGER 
     },
     price: {
         type: DataTypes.STRING,
@@ -54,6 +54,10 @@ const Event = sequelize.define('Event', {
     genre: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    imageUrl:{
+        type: DataTypes.STRING,
+        allowNull: true
     },
     status: {
         type: DataTypes.STRING,
@@ -69,11 +73,13 @@ const Event = sequelize.define('Event', {
     }
 }, {
     hooks: {
-        beforeCreate: (event) => {
-            // Set ticketsAvailable equal to ticketLimit if ticketsAvailable is missing
-            if (event.ticketLimit !== undefined && event.ticketsAvailable == null) {
-                event.ticketsAvailable = event.ticketLimit;
-            }
+        beforeBulkCreate: (events) => {
+            events.forEach(event => {
+                if (event.ticketsAvailable == null && event.ticketLimit != null) {
+                    event.ticketsAvailable = event.ticketLimit;
+                    console.log(`Updated ticketsAvailable for event ${event.id}:`, event.ticketsAvailable);
+                }
+            });
         }
     }
 });
