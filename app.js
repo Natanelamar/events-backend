@@ -3,6 +3,7 @@ const morgan = require ('morgan');
 const userRoutes = require('./routes/userRoutes')
 const eventsRoutes = require('./routes/eventRoutes');
 const purchasRouter = require('./routes/purchasRoutes')
+const adminRoutes = require('./routes/adminRoutes');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const app = express();
@@ -25,6 +26,7 @@ app.use((req, res, next) =>{
 app.use('/',userRoutes );
 app.use('/',eventsRoutes);
 app.use('/',purchasRouter);
+app.use('/',adminRoutes);
 
 
 module.exports = app;
