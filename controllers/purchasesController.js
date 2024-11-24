@@ -97,6 +97,7 @@ exports.buyTicket = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
         const { event_id, user_id, quantity } = req.params;
+        console.log(req.params)
 
         // Validate input parameters
         if (!event_id || !user_id || !quantity || isNaN(quantity) || quantity <= 0) {
@@ -129,7 +130,7 @@ exports.buyTicket = async (req, res) => {
         const purchaseDetails = await UserPurchase.bulkCreate(purchases, { transaction });
 
         // Update `ticketsSold` and calculate `ticketsAvailable`
-        event.ticketsSold += quantity;
+        event.ticketsSold += (quantity * 1);
         event.ticketsAvailable = event.ticketLimit - event.ticketsSold;
 
         // Save the updated event

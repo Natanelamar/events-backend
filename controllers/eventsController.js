@@ -1,3 +1,4 @@
+const { json } = require('sequelize');
 const Event = require('../models/Events');
 
 exports.getTreeFromCategory = async (req, res) =>{
@@ -62,4 +63,24 @@ exports.getByCategory = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+exports.getEventById = async (req, res) =>{
+    try{
+
+       const {eventId} = req.params
+       console.log(req.params)
+       console.log(eventId)
+      const  eventObj = await Event.findByPk(eventId);
+        if (!eventObj){
+           return res.status(404).json({message: "Event not found"})
+        }
+      return  res.status(200).json({message: 'success', data: eventObj});
+
+
+    }catch (err){
+        console.error("Error fetching event:", err);
+       return res.status(500).json({message: err.message});
+
+    }
+}
 
