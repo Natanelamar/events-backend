@@ -1,20 +1,32 @@
 
 const Event = require('../models/Events');
 const  User  = require('../models/User.js');
-
+const UserPurchase = require('../models/UserPurchase.js');
 exports.getAllInfo = async (req, res) =>{
     try{
+        const modelsName = {
+            'users': User,
+            'events': Event,
+            'sales': UserPurchase,
+        }
     const {queryParam} = req.params;
     console.log(req.params)
     console.log(queryParam)
     let infObj; // Define a variable in the outer scope
-    if (queryParam === 'events') {
-        infObj = await Event.findAll();
-    } else if (queryParam === 'users') {
-        infObj = await User.findAll();
+    // if (queryParam === 'events') {
+    //     infObj = await Event.findAll();
+    // } else if (queryParam === 'users') {
+    //     infObj = await User.findAll();
+    // } else {
+    //     return res.status(400).json({
+    //         message: 'Invalid query parameter. Use "events" or "users".'
+    //     });
+    if (queryParam in modelsName) {
+         infObj = await modelsName[queryParam].findAll(); // Dynamically access the model
+    
     } else {
         return res.status(400).json({
-            message: 'Invalid query parameter. Use "events" or "users".'
+            message: 'Invalid query parameter. Use "users", "events", or "sales".'
         });
     }
     res.status(200).json({

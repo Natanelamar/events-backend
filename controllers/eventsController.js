@@ -68,8 +68,6 @@ exports.getEventById = async (req, res) =>{
     try{
 
        const {eventId} = req.params
-       console.log(req.params)
-       console.log(eventId)
       const  eventObj = await Event.findByPk(eventId);
         if (!eventObj){
            return res.status(404).json({message: "Event not found"})
