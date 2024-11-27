@@ -12,15 +12,7 @@ exports.getAllInfo = async (req, res) =>{
     const {queryParam} = req.params;
     console.log(req.params)
     console.log(queryParam)
-    let infObj; // Define a variable in the outer scope
-    // if (queryParam === 'events') {
-    //     infObj = await Event.findAll();
-    // } else if (queryParam === 'users') {
-    //     infObj = await User.findAll();
-    // } else {
-    //     return res.status(400).json({
-    //         message: 'Invalid query parameter. Use "events" or "users".'
-    //     });
+    let infObj; 
     if (queryParam in modelsName) {
          infObj = await modelsName[queryParam].findAll(); // Dynamically access the model
     
