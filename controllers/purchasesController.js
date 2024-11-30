@@ -1,9 +1,11 @@
 const UserPurchase = require('../models/UserPurchase');
 const Event = require('../models/Events');
+const User = require('../models/User'); // Add this line
 const { where } = require('sequelize');
 const { Sequelize } = require('sequelize');
 const sequelize = require('../models/sequlizeInstans');
 const paypal =  require('../utils/payPal');
+const { sendPurchaseConfirmation } = require('../utils/emailService'); // Add this line
 
 // exports.buyTicket = async (req, res) => {
 //     const transaction = await sequelize.transaction();
@@ -99,15 +101,21 @@ exports.buyTicket = async (req, res) => {
         const { event_id, user_id, quantity } = req.params;
         console.log(req.params)
 
+        // Fetch the event and user within the transaction
+        const event = await Event.findByPk(event_id, { transaction });
+        const user = await User.findByPk(user_id, { transaction });
+
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         // Validate input parameters
         if (!event_id || !user_id || !quantity || isNaN(quantity) || quantity <= 0) {
             return res.status(400).json({ message: 'Invalid input parameters' });
-        }
-
-        // Fetch the event within the transaction
-        const event = await Event.findByPk(event_id, { transaction });
-        if (!event) {
-            return res.status(404).json({ message: 'Event not found' });
         }
 
         // Check if there are enough tickets available
@@ -130,14 +138,36 @@ exports.buyTicket = async (req, res) => {
         const purchaseDetails = await UserPurchase.bulkCreate(purchases, { transaction });
 
         // Update `ticketsSold` and calculate `ticketsAvailable`
-        event.ticketsSold += (quantity * 1);
-        event.ticketsAvailable = event.ticketLimit - event.ticketsSold;
-
-        // Save the updated event
+        event.ticketsSold += parseInt(quantity);  // Add purchased quantity to tickets sold
+        event.ticketsAvailable = event.ticketLimit - event.ticketsSold;  // Calculate new available tickets
         await event.save({ transaction });
 
         // Commit the transaction
         await transaction.commit();
+
+        // Send confirmation email
+        try {
+            console.log('Attempting to send confirmation email...');
+            const emailResult = await sendPurchaseConfirmation(
+                user.email,
+                {
+                    id: purchaseDetails[0].id,
+                    quantity: quantity,
+                    totalAmount: event.price * quantity
+                },
+                {
+                    eventId: event.id,
+                    title: event.name,
+                    date: event.date,
+                    location: event.location || 'TBA',
+                    price: event.price
+                }
+            );
+            console.log('Email sent successfully:', emailResult);
+        } catch (emailError) {
+            console.error('Failed to send confirmation email:', emailError);
+            // Don't fail the purchase if email fails
+        }
 
         // Calculate total cost for PayPal payment
         const total = (price * quantity).toFixed(2); // Ensure two decimal places
@@ -181,11 +211,10 @@ exports.buyTicket = async (req, res) => {
                 return res.status(500).json({ message: 'Approval URL not found' });
             }
         });
-    } catch (err) {
-        // Rollback the transaction in case of error
+    } catch (error) {
         await transaction.rollback();
-        console.error("Server Error:", err.message);
-        return res.status(500).json({ message: 'Server error', error: err.message });
+        console.error('Purchase error:', error);
+        res.status(500).json({ message: 'Failed to process purchase', error: error.message });
     }
 };
 
@@ -217,4 +246,3 @@ exports.successPay = (req, res) => {
         });
     });
 };
-

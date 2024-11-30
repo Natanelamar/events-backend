@@ -7,5 +7,7 @@ router.use(protectAdmin);
 
 
 router.route(`/admin/:queryParam`).get(adminController.getAllInfo);
+router.route(`/admin/:modelParam`).delete(adminController.deleteData);
+router.route(`/admin/:modelParam`).put(adminController.updateData);
 
 module.exports = router;

@@ -6,6 +6,7 @@ const purchasRouter = require('./routes/purchasRoutes')
 const adminRoutes = require('./routes/adminRoutes');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const testRoutes = require('./routes/testRoutes');
 const app = express();
 
 app.use(express.json());
@@ -16,10 +17,17 @@ app.use(cors({origin: "http://localhost:5173", credentials:true}));
 if (process.env.NODE_ENV === 'development'){
     app.use(morgan('dev'));
 }
- 
+
+// Move test routes before authentication middleware
+app.use('/api/test', testRoutes);
 
 app.use((req, res, next) =>{
     req.requestTime = new Date().toISOString();
+    next();
+});
+
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
     next();
 });
 
@@ -27,6 +35,5 @@ app.use('/',userRoutes );
 app.use('/',eventsRoutes);
 app.use('/',purchasRouter);
 app.use('/',adminRoutes);
-
 
 module.exports = app;
