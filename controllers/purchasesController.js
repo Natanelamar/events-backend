@@ -220,6 +220,130 @@ exports.buyTicket = async (req, res) => {
 
 
 
+exports.createPurchase = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    try {
+        const { event_id, user_id, quantity = 1 } = req.body;
+
+        // Validate required fields
+        const requiredFields = ['event_id', 'user_id'];
+        const missingFields = requiredFields.filter(field => !req.body[field]);
+        
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                status: 'error',
+                message: `Missing required fields: ${missingFields.join(', ')}`
+            });
+        }
+
+        // Check if event exists
+        const event = await Event.findByPk(event_id, { transaction });
+        if (!event) {
+            await transaction.rollback();
+            return res.status(404).json({
+                status: 'error',
+                message: 'Event not found'
+            });
+        }
+
+        // Check if user exists
+        const user = await User.findByPk(user_id, { transaction });
+        if (!user) {
+            await transaction.rollback();
+            return res.status(404).json({
+                status: 'error',
+                message: 'User not found'
+            });
+        }
+
+        // Check if there are enough tickets available
+        if (event.ticketsAvailable < quantity) {
+            await transaction.rollback();
+            return res.status(400).json({
+                status: 'error',
+                message: `Not enough tickets available. Requested: ${quantity}, Available: ${event.ticketsAvailable}`
+            });
+        }
+
+        // Create multiple purchase records
+        const purchases = Array.from({ length: quantity }, () => ({
+            event_id,
+            user_id,
+            purchase_date: new Date()
+        }));
+
+        const newPurchases = await UserPurchase.bulkCreate(purchases, { transaction });
+
+        // Update event tickets
+        event.ticketsSold += quantity;
+        event.ticketsAvailable = event.ticketLimit - event.ticketsSold;
+        await event.save({ transaction });
+
+        // Calculate total price
+        const totalPrice = parseFloat(event.price) * quantity;
+
+        // Commit transaction
+        await transaction.commit();
+
+        // Send email confirmation
+        try {
+            await sendPurchaseConfirmation(
+                user.email,
+                {
+                    id: newPurchases[0].id,
+                    eventName: event.name,
+                    quantity,
+                    totalAmount: totalPrice,
+                    purchaseDate: new Date(),
+                    eventDate: event.date
+                },
+                {
+                    eventId: event.id,
+                    title: event.name,
+                    date: event.date,
+                    location: event.location,
+                    price: event.price
+                }
+            );
+        } catch (emailError) {
+            console.error('Failed to send confirmation email:', emailError);
+            // Don't fail the purchase if email fails
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Purchase created successfully',
+            data: {
+                purchases: newPurchases,
+                eventStatus: {
+                    ticketsSold: event.ticketsSold,
+                    ticketsAvailable: event.ticketsAvailable
+                },
+                totalPrice
+            }
+        });
+
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Purchase creation failed:', error);
+        
+        if (error.name === 'SequelizeValidationError') {
+            res.status(400).json({
+                status: 'error',
+                message: error.errors.map(e => e.message)
+            });
+        } else {
+            res.status(500).json({
+                status: 'error',
+                message: 'Failed to create purchase',
+                error: error.message
+            });
+        }
+    }
+};
+
+
+
 exports.successPay = (req, res) => {
     const { paymentId, PayerID } = req.query;
 

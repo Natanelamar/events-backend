@@ -1,8 +1,46 @@
 const { Op } = require('sequelize');
 const Event = require('../models/Events');
-const  User  = require('../models/User.js');
+const User = require('../models/User.js');
 const UserPurchase = require('../models/UserPurchase.js');
+const usersController = require('./usersController');
+const { createEvent } = require('./eventsController');
+const { createPurchase } = require('./purchasesController');
+
 const bcrypt = require('bcrypt');
+
+// Admin-specific create user function that doesn't generate tokens
+const adminCreateUser = async (req, res) => {
+    try {
+        const newUser = await User.create(req.body);    
+        if (newUser) {
+            res.status(200).json({
+                status: 'Success',
+                data: {
+                    firstName: newUser.firstName,
+                    email: newUser.email
+                }
+            });
+        }
+    } catch (error) {
+        if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+            res.status(400).json({
+                status: 'Failure',
+                message: error.errors ? error.errors.map(e => e.message) : 'Validation error'
+            });
+        } else {
+            res.status(500).json({
+                status: 'Failure',
+                message: error.message || 'Internal server error'
+            });
+        }
+    }
+};
+
+const createFunctions = {
+    'users': adminCreateUser,
+    'events': createEvent,
+    'sales': createPurchase
+};
 
 exports.getAllInfo = async (req, res) =>{
     try{
@@ -17,6 +55,15 @@ exports.getAllInfo = async (req, res) =>{
     let infObj; 
     if (queryParam in modelsName) {
          infObj = await modelsName[queryParam].findAll(); // Dynamically access the model
+
+
+if (queryParam === 'sales') {
+    // Map purchase_id to id for the frontend table
+    infObj = infObj.map(purchase => ({
+        ...purchase.toJSON(),
+        id: purchase.purchase_id  // Add this field for the frontend table
+    }));
+}
     
     } else {
         return res.status(400).json({
@@ -59,9 +106,16 @@ exports.deleteData = async (req, res) =>{
             });
         }
 
+        let primaryKey;
+        if (modelParam === 'sales') {
+            primaryKey = 'purchase_id';
+        } else {
+            primaryKey = 'id';
+        }
+
         const result = await modelsName[modelParam].destroy({
             where: {
-                id: {
+                [primaryKey]: {
                     [Op.in]: ids  
                 }
             }
@@ -178,6 +232,34 @@ exports.updateData = async (req, res) => {
         res.status(500).json({
             status: 'error',
             message: 'An error occurred while updating the records',
+            error: error.message
+        });
+    }
+};
+
+exports.createFunction = async (req, res) => {
+    try {
+        const { queryParam } = req.params;
+        console.log('Received queryParam:', queryParam);
+        console.log('Available functions:', Object.keys(createFunctions));
+        console.log('Request body:', req.body);
+        
+        // Check if model exists
+        if (!createFunctions[queryParam]) {
+            return res.status(400).json({
+                status: 'error',
+                message: `Invalid model parameter: ${queryParam}. Available models: ${Object.keys(createFunctions).join(', ')}`
+            });
+        }
+
+        // Call the appropriate create function
+        await createFunctions[queryParam](req, res);
+
+    } catch (error) {
+        console.error('Creation failed:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Creation failed',
             error: error.message
         });
     }
