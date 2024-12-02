@@ -2,7 +2,7 @@ const { Op } = require('sequelize');
 const Event = require('../models/Events');
 const  User  = require('../models/User.js');
 const UserPurchase = require('../models/UserPurchase.js');
-
+const bcrypt = require('bcrypt');
 
 exports.getAllInfo = async (req, res) =>{
     try{
@@ -106,7 +106,8 @@ exports.updateData = async (req, res) => {
 
         const {modelParam} = req.params;
         const {ids, data} = req.body;
-
+        console.log(req.params)
+        console.log(req.body)
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
             return res.status(400).json({
                 status: 'error',
@@ -121,15 +122,26 @@ exports.updateData = async (req, res) => {
             });
         }
 
-       
+        // Create a copy of the update data
         const updateData = { ...data };
         delete updateData.id;
+        
+        // For user updates, remove password field if it's not being changed
+        if (modelParam === 'users' && updateData.password === undefined) {
+            delete updateData.password;
+        }
 
         if (Object.keys(updateData).length === 0) {
             return res.status(400).json({
                 status: 'error',
                 message: 'No valid fields to update'
             });
+        }
+
+        // For user updates with password change
+        if (modelParam === 'users' && updateData.password) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(updateData.password, salt);
         }
 
         const [updatedCount] = await modelsName[modelParam].update(updateData, {
@@ -147,7 +159,7 @@ exports.updateData = async (req, res) => {
             });
         }
 
-        // Fetch the updated records
+        // Fetch and return the updated records
         const updatedRecords = await modelsName[modelParam].findAll({
             where: {
                 id: {
@@ -169,4 +181,4 @@ exports.updateData = async (req, res) => {
             error: error.message
         });
     }
-}   
+};
