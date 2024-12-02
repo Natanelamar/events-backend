@@ -2,6 +2,7 @@ require('dotenv').config();
 const  connectToDb  = require('./utils/DBConnect.js');
 // const syncData = require('./models/syncDatabase.js')
 // const insertEvents = require('./data/insertEvents.js')
+const { User, Producer, Event, UserPurchase } = require('./models/associations');
 const app = require('./app.js')
 
 

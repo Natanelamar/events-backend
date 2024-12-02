@@ -1,4 +1,6 @@
 const  User  = require('../models/User.js');
+const UserPurchase = require('../models/UserPurchase.js');
+const Event = require('../models/Events.js');
 const {generateToken} = require('../utils/generateToken.js');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -141,4 +143,39 @@ exports.logout = async (req,res ) =>{
       res.status(200).json({ message: "User logged out" });
     
 }
+
+exports.getUserPurchases = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // Find all purchases for this user, including event details
+        const purchases = await UserPurchase.findAll({
+            where: { user_id: userId },
+            include: [{
+                model: Event, // Use Event model to include event-related information
+                as: 'event',  // This alias must match the one in the association definition
+                attributes: ['name', 'date', 'location', 'venueName', 'status', 'price']
+            }],
+            order: [['purchase_date', 'DESC']]
+        });
+
+        if (!purchases || purchases.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'No purchases found for this user'
+            });
+        }
+
+        res.status(200).json({
+            status: 'success',
+            data: purchases
+        });
+    } catch (error) {
+        console.error('Error fetching user purchases:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to fetch user purchases'
+        });
+    }
+};
 
