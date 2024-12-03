@@ -152,11 +152,10 @@ exports.getUserPurchases = async (req, res) => {
         const purchases = await UserPurchase.findAll({
             where: { user_id: userId },
             include: [{
-                model: Event, // Use Event model to include event-related information
-                as: 'event',  // This alias must match the one in the association definition
-                attributes: ['name', 'date', 'location', 'venueName', 'status', 'price']
-            }],
-            order: [['purchase_date', 'DESC']]
+                model: Event,
+                as: 'event',
+                attributes: ['id', 'name', 'date', 'location', 'venueName', 'status', 'price','imageUrl']
+            }]
         });
 
         if (!purchases || purchases.length === 0) {
@@ -166,9 +165,11 @@ exports.getUserPurchases = async (req, res) => {
             });
         }
 
+        const events = purchases.map(purchase => purchase.event);
+
         res.status(200).json({
             status: 'success',
-            data: purchases
+            data: events
         });
     } catch (error) {
         console.error('Error fetching user purchases:', error);
